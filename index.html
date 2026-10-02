@@ -58,6 +58,16 @@ body{background:var(--bg);color:var(--text);font:14px/1.5 "Plus Jakarta Sans",sy
 .depseg button.on{opacity:1;background:#fff;color:#1e1b4b}
 .depseg button[data-d="PJ"].on{background:linear-gradient(135deg,#8b5cf6,#c084fc);color:#fff}
 .depseg button[data-d="PF"].on{background:linear-gradient(135deg,#0d9488,#2dd4bf);color:#fff}
+.per{display:flex;align-items:center;gap:8px;padding:6px 10px}
+.per label{font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.85)}
+.per select{background:#fff;color:#1e1b4b;border:0;border-radius:8px;padding:6px 8px;font-weight:700;font-size:13px;cursor:pointer}
+.per select.on{background:linear-gradient(135deg,#fde68a,#fb923c);color:#1e1b4b}
+.perchip{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);font-size:12.5px;font-weight:700;color:#fff}
+.perchip b{color:#fde68a}
+tr.sel td{box-shadow:inset 0 2px 0 var(--gold),inset 0 -2px 0 var(--gold)}
+tr.sel td:first-child b{color:var(--gold)}
+.mtbl td.pos{font-weight:800}
+.mv{font-size:11px;font-weight:800;margin-left:6px}
 .theme-btn{color:#fff;font:inherit;font-weight:600;font-size:13px;padding:9px 14px;cursor:pointer}
 
 /* TABS */
@@ -178,11 +188,12 @@ tfoot td{font-weight:800;border-top:2px solid var(--border);border-bottom:0}
   <div class="wrap">
     <div class="hero-top">
       <div>
-        <div class="eyebrow">Relatório de produtividade · Jan–Set 2026</div>
+        <div class="eyebrow" id="eyebrow">Relatório de produtividade</div>
         <h1>Painel de <span>Tarefas</span> da Equipe</h1>
-        <p id="heroSub"></p>
+        <p id="heroSub"></p><div class="perchip" id="perChip"></div>
       </div>
       <div class="hero-ctrl">
+        <div class="glass per"><label for="selAno">Ano</label><select id="selAno"></select><label for="selMes">Mês</label><select id="selMes"></select></div>
         <div class="glass depseg" id="depSeg" title="Filtra Visão Geral, Mensal, Pontualidade, Mapa de Calor e Dados">
           <button data-d="ALL" class="on">Todos</button><button data-d="PJ">PJ</button><button data-d="PF">PF</button>
         </div>
@@ -195,6 +206,7 @@ tfoot td{font-weight:800;border-top:2px solid var(--border);border-bottom:0}
 <div class="wrap tabbar">
   <nav class="tabs" id="tabs">
     <button data-tab="geral" class="active" style="--c:#6366f1;--c2:#8b5cf6"><i></i>Visão Geral</button>
+    <button data-tab="mes" style="--c:#f59e0b;--c2:#ef4444"><i></i>Análise do Mês</button>
     <button data-tab="mensal" style="--c:#2563eb;--c2:#06b6d4"><i></i>Cruzamento Mensal</button>
     <button data-tab="individual" style="--c:#db2777;--c2:#f97316"><i></i>Cruzamento Individual</button>
     <button data-tab="dept" style="--c:#7c3aed;--c2:#0d9488"><i></i>PJ × PF</button>
@@ -227,6 +239,21 @@ tfoot td{font-weight:800;border-top:2px solid var(--border);border-bottom:0}
     <div class="card"><h3>Departamento</h3><p class="desc">Divisão do volume entre PJ e PF.</p><div class="chart sm"><canvas id="dDept"></canvas></div></div>
     <div class="card"><h3>Pontualidade</h3><p class="desc">Tarefas concluídas no prazo × com atraso.</p><div class="chart sm"><canvas id="dLate"></canvas></div></div>
   </div>
+</section>
+
+<!-- ============ ANÁLISE DO MÊS ============ -->
+<section class="tab" id="tab-mes">
+  <div class="sec-head"><div><h2 id="mesTitle">Análise do Mês</h2><p id="mesSub"></p></div><div class="seg" id="segMes"></div></div>
+  <div class="grid kpis" id="kpisMes"></div>
+  <div class="grid g21">
+    <div class="card"><h3>Ranking do mês</h3><p class="desc" id="mesRankDesc">Recorrentes e O.S. de cada pessoa no mês; a barra cinza mostra o total do mês anterior.</p><div class="chart tall"><canvas id="mesRank"></canvas></div></div>
+    <div class="card"><h3>PJ × PF no mês</h3><p class="desc">Divisão do volume do mês e comparação com o mês anterior.</p><div class="chart xs"><canvas id="mesDept"></canvas></div><div class="tbl-wrap" style="margin-top:14px"><table id="mesDeptTbl"></table></div></div>
+  </div>
+  <div class="grid g2 mt">
+    <div class="card"><h3>Variação por pessoa</h3><p class="desc" id="mesDeltaDesc">Diferença de tarefas frente ao mês anterior.</p><div class="chart"><canvas id="mesDelta"></canvas></div></div>
+    <div class="card"><h3>Atraso no mês por pessoa</h3><p class="desc">% concluído com atraso no mês. Verde = abaixo de 1%, amarelo = até 5%, vermelho = acima de 5%.</p><div class="chart"><canvas id="mesLate"></canvas></div></div>
+  </div>
+  <div class="card mt"><h3>Quadro do mês</h3><p class="desc">Indicadores de cada pessoa no mês, com a variação e a mudança de posição frente ao mês anterior.</p><div class="tbl-wrap"><table id="mesTbl" class="mtbl"></table></div></div>
 </section>
 
 <!-- ============ MENSAL ============ -->
@@ -283,12 +310,12 @@ tfoot td{font-weight:800;border-top:2px solid var(--border);border-bottom:0}
     <div class="card"><h3>Evolução mensal PJ × PF</h3><p class="desc">Total de tarefas por mês (área) e média por pessoa (tracejado, eixo da direita).</p><div class="chart"><canvas id="dLine"></canvas></div></div>
   </div>
   <div class="grid g2 mt">
-    <div class="card"><h3>Ranking por departamento</h3><p class="desc">Total acumulado, colorido pelo departamento.</p><div class="chart tall"><canvas id="dRank"></canvas></div></div>
+    <div class="card"><h3>Ranking por departamento</h3><p class="desc">Total no período selecionado (ano ou mês), colorido pelo departamento.</p><div class="chart tall"><canvas id="dRank"></canvas></div></div>
     <div class="card"><h3>Participação de cada pessoa no seu departamento</h3><p class="desc">Anel interno = departamento; anel externo = pessoas.</p><div class="chart tall"><canvas id="dSun"></canvas></div></div>
   </div>
   <div class="grid g2 mt">
     <div class="card"><h3>Composição do trabalho</h3><p class="desc">Recorrentes × O.S. por pessoa (%), agrupado por departamento.</p><div class="chart tall"><canvas id="dMix"></canvas></div></div>
-    <div class="card"><h3>Média mensal × média do departamento</h3><p class="desc">Quanto cada pessoa fica acima ou abaixo da média do próprio departamento.</p><div class="chart tall"><canvas id="dDiff"></canvas></div></div>
+    <div class="card"><h3>Média mensal × média do departamento</h3><p class="desc">Quanto cada pessoa fica acima ou abaixo da média por pessoa do próprio departamento, no período selecionado.</p><div class="chart tall"><canvas id="dDiff"></canvas></div></div>
   </div>
 </section>
 
@@ -325,7 +352,6 @@ tfoot td{font-weight:800;border-top:2px solid var(--border);border-bottom:0}
     <div><h2>Dados</h2><p>Os registros cruzados dos três blocos da planilha. Clique no cabeçalho para ordenar.</p></div>
     <div class="toolbar">
       <input type="search" id="q" placeholder="Filtrar por pessoa…">
-      <select id="selMesDados"></select>
       <span class="pill" id="countDados"></span>
     </div>
   </div>
@@ -368,9 +394,15 @@ const title=s=>s.toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase()).replace(/
 const ini=s=>s.split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join('');
 const sum=(a,k)=>a.reduce((s,r)=>s+(typeof k==='function'?k(r):r[k]),0);
 const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-const months=[...new Set(RAW.map(r=>r.m))].sort();
+const MESF=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const mL=m=>MES[+m.slice(5,7)-1]+'/'+m.slice(2,4);
-const labels=months.map(mL);
+const mF=m=>MESF[+m.slice(5,7)-1]+' de '+m.slice(0,4);
+const ALLM=[...new Set(RAW.map(r=>r.m))].sort();
+const YEARS=[...new Set(ALLM.map(m=>m.slice(0,4)))].sort();
+let YEAR=YEARS.at(-1), MONTH='';
+let months=ALLM.filter(m=>m.startsWith(YEAR)), labels=months.map(mL);
+const prevM=m=>ALLM[ALLM.indexOf(m)-1];
+const isMon=lbl=>!!MONTH&&lbl===mL(MONTH);
 const DEPS=['PJ','PF'];
 const agg=rows=>{const t=sum(rows,'t'),r=sum(rows,'r'),o=sum(rows,'o'),as=sum(rows,'as'),t3=sum(rows,'t3'),ab=sum(rows,'ab');
   return {t,r,o,as,t3,ab,cc:sum(rows,'cc'),n:new Set(rows.map(x=>x.p)).size,rows:rows.length,pl:t3?as/t3:0,po:t?o/t:0};};
@@ -382,7 +414,12 @@ const PF_C=['#0d9488','#06b6d4','#10b981','#0ea5e9','#84cc16','#14b8a6','#22c55e
 const pColor={};{let i=0,j=0;allPeople.forEach(p=>{pColor[p]=deptOf[p]==='PJ'?PJ_C[i++%PJ_C.length]:PF_C[j++%PF_C.length];});}
 const VIVID=['#6366f1','#f97316','#10b981','#ec4899','#06b6d4','#eab308','#8b5cf6','#ef4444','#14b8a6','#f59e0b','#3b82f6','#84cc16'];
 let DEP='ALL';
-const F=()=>DEP==='ALL'?RAW:RAW.filter(r=>r.d===DEP);
+const RY=()=>RAW.filter(r=>r.m.startsWith(YEAR));
+const RP=()=>RY().filter(r=>!MONTH||r.m===MONTH);
+const F=()=>RY().filter(r=>DEP==='ALL'||r.d===DEP);
+const FP=()=>F().filter(r=>!MONTH||r.m===MONTH);
+const peopleY=()=>allPeople.filter(p=>RY().some(r=>r.p===p));
+const perTxt=()=>MONTH?mF(MONTH):`ano de ${YEAR} (${labels[0]}–${labels.at(-1)})`;
 const hex2rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
 const alpha=(h,a)=>{h=h.trim();if(h.startsWith('#')){const[r,g,b]=hex2rgb(h);return `rgba(${r},${g},${b},${a})`;}return h;};
 function mix(a,b,t){const A=hex2rgb(a),B=hex2rgb(b);return 'rgb('+A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')+')';}
@@ -391,6 +428,12 @@ const lum=c=>{const m=c.match(/\d+/g).map(Number);return (0.299*m[0]+0.587*m[1]+
 // vertical gradient for bars/areas
 const grad=(c1,c2,horizontal)=>ctx=>{const {chart}=ctx;const a=chart.chartArea;if(!a) return c1;
   const g=horizontal?chart.ctx.createLinearGradient(a.left,0,a.right,0):chart.ctx.createLinearGradient(0,a.bottom,0,a.top);g.addColorStop(0,c1);g.addColorStop(1,c2);return g;};
+// dim bars outside the selected month
+const hg=(c1,c2,hz)=>ctx=>{const l=ctx.chart.data.labels[ctx.dataIndex];if(MONTH&&!isMon(l))return alpha(c2,.2);return grad(c1,c2,hz)(ctx);};
+const hc=fn=>ctx=>{const c=fn(ctx);const l=ctx.chart.data.labels[ctx.dataIndex];return MONTH&&!isMon(l)?alpha(c,.22):c;};
+const toHex=c=>{if(c.startsWith('#'))return c;const m=c.match(/\d+/g).map(Number);return '#'+m.slice(0,3).map(v=>v.toString(16).padStart(2,'0')).join('');};
+const dl=(cur,prev,inv,suf)=>{if(!prev)return '<span style="color:var(--faint)">sem mês anterior</span>';const d=cur/prev-1,good=inv?d<=0:d>=0;return `<span class="${good?'up':'down'}">${d>=0?'▲':'▼'} ${pct(Math.abs(d))}</span>${suf===false?'':' vs '+mL(prevM(MONTH||months.at(-1)))}`;};
+const dpp=(cur,prev,inv)=>{const d=(cur-prev)*100,good=inv?d<=0:d>=0;return `<span class="${good?'up':'down'}">${d>=0?'▲':'▼'} ${Math.abs(d).toFixed(2).replace('.',',')} p.p.</span>`;};
 const ICON={
   sum:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 19h16M7 15V9M12 15V5M17 15v-3"/></svg>',
   loop:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>',
@@ -406,6 +449,10 @@ const kpiCard=(o)=>`<div class="card kpi" style="--c:${o.c};--c2:${o.c2}"><div c
 
 /* ---------------- Chart defaults ---------------- */
 Chart.register(ChartDataLabels);
+Chart.register({id:'monthBand',beforeDatasetsDraw(ch){if(!MONTH)return;const x=ch.scales.x;if(!x||x.type!=='category')return;const i=(ch.data.labels||[]).indexOf(mL(MONTH));if(i<0)return;
+  const a=ch.chartArea,w=(a.right-a.left)/ch.data.labels.length,cx=x.getPixelForValue(i),c=ch.ctx;c.save();
+  const g=c.createLinearGradient(0,a.top,0,a.bottom);g.addColorStop(0,alpha(toHex(css('--gold')),.25));g.addColorStop(1,alpha(toHex(css('--gold')),.05));c.fillStyle=g;
+  const r=8,x0=cx-w/2+2,y0=a.top-6,ww=w-4,hh=a.bottom-a.top+6;c.beginPath();c.roundRect?c.roundRect(x0,y0,ww,hh,r):c.rect(x0,y0,ww,hh);c.fill();c.restore();}});
 function applyDefaults(){
   Chart.defaults.color=css('--muted');Chart.defaults.borderColor=css('--border');
   Chart.defaults.font.family='"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif';Chart.defaults.font.size=12;
@@ -419,34 +466,49 @@ const mk=(id,cfg)=>{const el=document.getElementById(id);const ex=Chart.getChart
 const G=()=>({color:css('--border')});
 const yN={beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:()=>css('--border')},border:{display:false}};
 const yP={beginAtZero:true,ticks:{callback:v=>v+'%'},grid:{color:()=>css('--border')},border:{display:false}};
-const xN={grid:{display:false},border:{display:false}};
+const xN={grid:{display:false},border:{display:false},ticks:{color:c=>c.tick&&isMon(c.tick.label)?css('--text'):css('--muted'),font:c=>({weight:c.tick&&isMon(c.tick.label)?'800':'500'})}};
 const tipN={callbacks:{label:c=>` ${c.dataset.label}: ${fmt(c.parsed.y??c.parsed)}`}};
 const DL=(o={})=>Object.assign({display:true,color:css('--text'),font:{weight:'700',size:11}},o);
 const P1=v=>v.toFixed(1).replace('.',',')+'%';
 
 /* ---------------- VISÃO GERAL ---------------- */
 function renderGeral(){
-  const R=F(), A=agg(R), mA=months.map(m=>agg(R.filter(r=>r.m===m)));
+  const R=F(), A=agg(FP()), mA=months.map(m=>agg(R.filter(r=>r.m===m)));
   const first=mA[0], last=mA.at(-1), peakI=mA.reduce((b,x,i)=>x.t>mA[b].t?i:b,0);
   const dname=DEP==='ALL'?'Toda a equipe':'Departamento '+DEP;
-  document.getElementById('heroSub').textContent=`${allPeople.length} colaboradores · PJ e PF · ${RAW.length} registros mensais`;
-  document.getElementById('geralSub').textContent=`${dname} · ${A.n} pessoas · ${labels[0]} a ${labels.at(-1)}`;
-  const g=last.t/first.t-1;
+  const B=MONTH?agg(RAW.filter(r=>r.m===prevM(MONTH)&&(DEP==='ALL'||r.d===DEP))):null;
+  document.getElementById('geralSub').textContent=`${dname} · ${A.n} pessoas · ${perTxt()}`;
+  const g=MONTH?(B.t?A.t/B.t-1:0):last.t/first.t-1;
   document.getElementById('kpis').innerHTML=[
-    {l:'Total de tarefas',v:fmt(A.t),n:`${fmt(A.t/months.length)} por mês em média`,i:'sum',c:'#6366f1',c2:'#a855f7'},
+    {l:MONTH?'Tarefas no mês':'Total de tarefas',v:fmt(A.t),n:MONTH?`${dl(A.t,B.t)} · média do ano ${fmt(agg(R).t/months.length)}`:`${fmt(A.t/months.length)} por mês em média`,i:'sum',c:'#6366f1',c2:'#a855f7'},
     {l:'Recorrentes',v:fmt(A.r),n:`${pct(A.r/A.t)} do total`,i:'loop',c:'#2563eb',c2:'#38bdf8',bar:`<span style="width:${A.r/A.t*100}%;background:var(--rec)"></span>`},
     {l:'Ordens de Serviço',v:fmt(A.o),n:`${pct(A.po)} do total`,i:'tool',c:'#ea580c',c2:'#fbbf24',bar:`<span style="width:${A.po*100}%;background:var(--os)"></span>`},
     {l:'Concluídas',v:pct(A.cc/A.t,2),n:`${fmt(A.ab)} ${A.ab===1?'tarefa aberta':'tarefas abertas'} no período`,i:'check',c:'#059669',c2:'#34d399'},
     {l:'Concluídas com atraso',v:pct(A.pl),n:`${fmt(A.as)} tarefas fora do prazo`,i:'clock',c:'#e11d48',c2:'#fb7185',bar:`<span style="width:${Math.min(100,A.pl*100*8)}%;background:var(--late)"></span>`},
-    {l:`Crescimento ${labels[0]}→${labels.at(-1)}`,v:(g>=0?'+':'')+pct(g),n:`<span class="${g>=0?'up':'down'}">${fmt(first.t)} → ${fmt(last.t)}</span> · pico em ${labels[peakI]}`,i:'trend',c:'#0d9488',c2:'#5eead4'},
+    MONTH?{l:'Variação vs mês anterior',v:B.t?(g>=0?'+':'')+pct(g):'—',n:B.t?`<span class="${g>=0?'up':'down'}">${fmt(B.t)} → ${fmt(A.t)}</span> · ${mL(prevM(MONTH))} → ${mL(MONTH)}`:'sem mês anterior na base',i:'trend',c:'#0d9488',c2:'#5eead4'}
+    :{l:`Crescimento ${labels[0]}→${labels.at(-1)}`,v:(g>=0?'+':'')+pct(g),n:`<span class="${g>=0?'up':'down'}">${fmt(first.t)} → ${fmt(last.t)}</span> · pico em ${labels[peakI]}`,i:'trend',c:'#0d9488',c2:'#5eead4'},
   ].map(kpiCard).join('');
 
   // insights (fixed to whole team for richness, but respects filter)
   const pA=[...new Set(R.map(r=>r.p))].map(p=>({p,...agg(R.filter(r=>r.p===p))})).sort((a,b)=>b.t-a.t);
   const grow=pA.filter(x=>x.rows===months.length).map(x=>{const rs=R.filter(r=>r.p===x.p);return{p:x.p,a:rs.find(r=>r.m===months[0]).t,b:rs.find(r=>r.m===months.at(-1)).t}}).sort((x,y)=>y.b/y.a-x.b/x.a)[0];
-  const Dg=DEPS.map(d=>({d,...agg(RAW.filter(r=>r.d===d))}));
+  const Dg=DEPS.map(d=>({d,...agg(RY().filter(r=>r.d===d))}));
   const lateBest=mA.reduce((b,x,i)=>x.pl<mA[b].pl?i:b,0);
-  const ins=[
+  let ins;
+  if(MONTH){
+    const cur=FP(),prv=RAW.filter(r=>r.m===prevM(MONTH)&&(DEP==='ALL'||r.d===DEP));
+    const pm=[...new Set(cur.map(r=>r.p))].map(p=>({p,t:sum(cur.filter(r=>r.p===p),'t'),b:sum(prv.filter(r=>r.p===p),'t')})).sort((a,b)=>b.t-a.t);
+    const up=pm.filter(x=>x.b).sort((a,b)=>(b.t-b.b)-(a.t-a.b))[0];
+    const rk=[...mA].map((x,i)=>[x.t,i]).sort((a,b)=>b[0]-a[0]).findIndex(x=>labels[x[1]]===mL(MONTH))+1;
+    const Dm=DEPS.map(d=>agg(cur.filter(r=>r.d===d)));
+    ins=[
+      {c:'#6366f1',t:`${mF(MONTH)} teve <b>${fmt(A.t)}</b> tarefas (${B.t?dl(A.t,B.t):'primeiro mês da base'}). É o <b>${rk}º</b> maior volume dos ${months.length} meses de ${YEAR}.`},
+      {c:'#f97316',t:`As O.S. foram <b>${pct(A.po)}</b> do mês${B.t?` (eram ${pct(B.po)} no mês anterior)`:''}.`},
+      {c:'#e11d48',t:`O atraso ficou em <b>${pct(A.pl,2)}</b> (${fmt(A.as)} tarefas)${B.t?`: ${dpp(A.pl,B.pl,true)} frente a ${mL(prevM(MONTH))}`:''}.`},
+      DEP==='ALL'?{c:'#7c3aed',t:`PJ fez <b>${fmt(Dm[0].t)}</b> e PF <b>${fmt(Dm[1].t)}</b> tarefas. Por pessoa: PJ <b>${fmt(Dm[0].t/(Dm[0].n||1))}</b> × PF <b>${fmt(Dm[1].t/(Dm[1].n||1))}</b>.`}:null,
+      {c:'#0d9488',t:`<b>${title(pm[0].p)}</b> liderou o mês com <b>${fmt(pm[0].t)}</b> tarefas.`+(up&&up.t>up.b?` Maior alta: <b>${title(up.p)}</b> (+${fmt(up.t-up.b)}).`:'')},
+    ].filter(Boolean);
+  } else ins=[
     {c:'#6366f1',t:`O volume subiu de <b>${fmt(first.t)}</b> em ${labels[0]} para <b>${fmt(mA[peakI].t)}</b> em ${labels[peakI]} (<b>+${pct(mA[peakI].t/first.t-1)}</b>).`},
     {c:'#f97316',t:`As O.S. passaram de <b>${pct(first.po)}</b> para <b>${pct(last.po)}</b> do volume mensal: o trabalho sob demanda vem ganhando espaço.`},
     {c:'#e11d48',t:`O atraso caiu de <b>${pct(first.pl)}</b> em ${labels[0]} para <b>${pct(mA[lateBest].pl)}</b> em ${labels[lateBest]}. Em ${labels.at(-1)} ficou em <b>${pct(last.pl)}</b>.`},
@@ -458,8 +520,8 @@ function renderGeral(){
   mk('cMonthly',{type:'bar',data:{labels,datasets:[
     {type:'line',label:'% com atraso',data:mA.map(x=>+(x.pl*100).toFixed(2)),yAxisID:'y2',borderColor:css('--late'),backgroundColor:css('--late'),pointRadius:4,pointBackgroundColor:css('--surface'),pointBorderWidth:2.5,tension:.35,order:0,
       datalabels:DL({align:'top',color:css('--late'),font:{size:10.5,weight:'700'},formatter:v=>P1(v)})},
-    {label:'Recorrentes',data:mA.map(x=>x.r),backgroundColor:grad(alpha(css('--rec'),.75),css('--rec')),stack:'s',order:1,borderRadius:0},
-    {label:'O.S.',data:mA.map(x=>x.o),backgroundColor:grad(css('--os'),css('--os2')),stack:'s',order:1,borderRadius:{topLeft:8,topRight:8},
+    {label:'Recorrentes',data:mA.map(x=>x.r),backgroundColor:hg(alpha(css('--rec'),.75),css('--rec')),stack:'s',order:1,borderRadius:0},
+    {label:'O.S.',data:mA.map(x=>x.o),backgroundColor:hg(css('--os2'),css('--os')),stack:'s',order:1,borderRadius:{topLeft:8,topRight:8},
       datalabels:DL({anchor:'end',align:'end',offset:2,formatter:(v,c)=>fmt(mA[c.dataIndex].t)})},
   ]},options:{layout:{padding:{top:24}},interaction:{mode:'index',intersect:false},
     plugins:{tooltip:{callbacks:{label:c=>c.dataset.yAxisID==='y2'?` % com atraso: ${P1(c.parsed.y)}`:` ${c.dataset.label}: ${fmt(c.parsed.y)}`,footer:it=>'Total: '+fmt(mA[it[0].dataIndex].t)}}},
@@ -469,9 +531,77 @@ function renderGeral(){
     datalabels:DL({color:'#fff',font:{weight:'800',size:12},formatter:(v,c)=>{const t=sum(c.dataset.data,x=>x);return v/t>.04?pct(v/t,1):''}})}]},
     options:{cutout:'62%',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.raw)} (${pct(c.raw/sum(c.dataset.data,x=>x))})`}}}}});
   donut('dType',['Recorrentes','O.S.'],[A.r,A.o],[css('--rec'),css('--os')]);
-  const dv=DEPS.map(d=>sum(R.filter(r=>r.d===d),'t'));
+  const dv=DEPS.map(d=>sum(FP().filter(r=>r.d===d),'t'));
   donut('dDept',['PJ','PF'],dv,[css('--pj'),css('--pf')]);
   donut('dLate',['No prazo','Com atraso'],[A.t3-A.as,A.as],[css('--ok'),css('--late')]);
+}
+
+/* ---------------- ANÁLISE DO MÊS ---------------- */
+function renderMes(){
+  const MM=MONTH||months.at(-1), PM=prevM(MM);
+  const inD=r=>DEP==='ALL'||r.d===DEP;
+  const cur=RAW.filter(r=>r.m===MM&&inD(r)), prv=PM?RAW.filter(r=>r.m===PM&&inD(r)):[];
+  const A=agg(cur),B=agg(prv),yAvg=agg(F()).t/months.length;
+  const dname=DEP==='ALL'?'Toda a equipe':'Departamento '+DEP;
+  document.getElementById('mesTitle').textContent='Análise de '+mF(MM);
+  document.getElementById('mesSub').innerHTML=MONTH?`${dname} · comparado com ${PM?mL(PM):'—'} e com a média de ${YEAR}`:`<b style="color:var(--gold)">Nenhum mês escolhido no topo:</b> mostrando o último mês disponível. Clique em um mês ao lado.`;
+  const seg=document.getElementById('segMes');
+  seg.innerHTML=months.map(m=>`<button data-m="${m}" class="${m===MM?'on':''}">${MES[+m.slice(5,7)-1]}</button>`).join('');
+  seg.querySelectorAll('button').forEach(b=>b.onclick=()=>setPeriod(YEAR,b.dataset.m));
+  const D=(a,b,inv)=>B.rows?dl(a,b,inv,false)+` vs ${mL(PM)}`:'<span style="color:var(--faint)">sem mês anterior</span>';
+  const ppl=[...new Set(cur.map(r=>r.p))].map(p=>{const c=agg(cur.filter(r=>r.p===p)),b=agg(prv.filter(r=>r.p===p));return {p,d:deptOf[p],...c,bt:b.rows?b.t:null,bpl:b.rows?b.pl:null};}).sort((a,b)=>b.t-a.t);
+  const top=ppl[0];
+  const rkY=[...months].map(m=>[agg(F().filter(r=>r.m===m)).t,m]).sort((a,b)=>b[0]-a[0]).findIndex(x=>x[1]===MM)+1;
+  document.getElementById('kpisMes').innerHTML=[
+    {l:'Tarefas no mês',v:fmt(A.t),n:`${D(A.t,B.t)} · ${rkY}º maior de ${YEAR}`,i:'sum',c:'#f59e0b',c2:'#ef4444'},
+    {l:'Recorrentes',v:fmt(A.r),n:D(A.r,B.r),i:'loop',c:'#2563eb',c2:'#38bdf8',bar:`<span style="width:${A.t?A.r/A.t*100:0}%;background:var(--rec)"></span>`},
+    {l:'Ordens de Serviço',v:fmt(A.o),n:`${pct(A.po)} do mês · ${D(A.o,B.o)}`,i:'tool',c:'#ea580c',c2:'#fbbf24',bar:`<span style="width:${A.po*100}%;background:var(--os)"></span>`},
+    {l:'% com atraso',v:pct(A.pl,2),n:`${fmt(A.as)} tarefas${B.rows?' · '+dpp(A.pl,B.pl,true):''}`,i:'clock',c:'#e11d48',c2:'#fb7185'},
+    {l:'Por pessoa',v:fmt(A.t/(A.n||1)),n:`${A.n} pessoas · ${B.rows?D(A.t/A.n,B.t/B.n):'—'}`,i:'users',c:'#0d9488',c2:'#5eead4'},
+    {l:'Destaque do mês',v:top?title(top.p).split(' ')[0]:'—',n:top?`${fmt(top.t)} tarefas · ${pct(top.t/A.t)} do mês`:'',i:'star',c:'#8b5cf6',c2:'#f0abfc'},
+  ].map(kpiCard).join('');
+  const L=ppl.map(x=>title(x.p));
+  const tickC={color:c=>deptOf[ppl[c.index]?.p]==='PJ'?css('--pj'):css('--pf'),font:{weight:'700'}};
+  document.getElementById('mesRankDesc').textContent=`Recorrentes e O.S. de cada pessoa em ${mL(MM)}${PM?`; a barra cinza mostra o total de ${mL(PM)}`:''}.`;
+  mk('mesRank',{type:'bar',data:{labels:L,datasets:[
+    {label:'Recorrentes',data:ppl.map(x=>x.r),backgroundColor:grad(alpha(css('--rec'),.7),css('--rec'),true),stack:'a',borderRadius:0},
+    {label:'O.S.',data:ppl.map(x=>x.o),backgroundColor:grad(css('--os'),css('--os2'),true),stack:'a',borderRadius:{topRight:6,bottomRight:6},
+      datalabels:DL({anchor:'end',align:'end',formatter:(v,c)=>fmt(ppl[c.dataIndex].t)})},
+    ...(PM?[{label:mL(PM),data:ppl.map(x=>x.bt),backgroundColor:alpha(toHex(css('--faint')),.45),stack:'b',borderRadius:4}]:[]),
+  ]},options:{indexAxis:'y',layout:{padding:{right:50}},interaction:{mode:'index',intersect:false},
+    plugins:{tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.x==null?'—':fmt(c.parsed.x)}`,footer:it=>{const x=ppl[it[0].dataIndex];return `Total ${mL(MM)}: ${fmt(x.t)}`+(x.bt!=null?` · Δ ${x.t-x.bt>=0?'+':''}${fmt(x.t-x.bt)}`:'');}}}},
+    scales:{x:{...yN,stacked:true},y:{stacked:true,grid:{display:false},border:{display:false},ticks:tickC}}}});
+  // dept
+  const showD=DEP==='ALL'?DEPS:[DEP];
+  const Dc=showD.map(d=>agg(cur.filter(r=>r.d===d))),Dp=showD.map(d=>agg(prv.filter(r=>r.d===d)));
+  mk('mesDept',{type:'doughnut',data:{labels:showD,datasets:[{data:Dc.map(x=>x.t),backgroundColor:showD.map(d=>d==='PJ'?css('--pj'):css('--pf')),borderColor:css('--surface'),borderWidth:3,
+    datalabels:DL({color:'#fff',font:{weight:'800',size:12},formatter:(v,c)=>`${showD[c.dataIndex]}\n${pct(v/(A.t||1),0)}`,textAlign:'center'})}]},
+    options:{cutout:'55%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.raw)}`}}}}});
+  document.getElementById('mesDeptTbl').innerHTML=`<thead><tr><th>Depto</th><th>Tarefas</th><th>vs ant.</th><th>Por pessoa</th><th>% O.S.</th><th>% atraso</th></tr></thead><tbody>`+
+    showD.map((d,i)=>{const c=Dc[i],b=Dp[i];return `<tr><td><span class="badge ${d}">${d}</span></td><td><b>${fmt(c.t)}</b></td><td>${b.rows?dl(c.t,b.t,false,false):'—'}</td><td>${fmt(c.t/(c.n||1))}</td><td>${pct(c.po)}</td><td>${pct(c.pl,2)}</td></tr>`}).join('')+`</tbody>`;
+  // delta
+  const dd=ppl.filter(x=>x.bt!=null).map(x=>({p:x.p,v:x.t-x.bt,a:x.bt,b:x.t})).sort((a,b)=>b.v-a.v);
+  document.getElementById('mesDeltaDesc').textContent=PM?`Diferença de tarefas entre ${mL(PM)} e ${mL(MM)}. Pessoas sem registro no mês anterior não aparecem.`:'Não há mês anterior na base para comparar.';
+  mk('mesDelta',{type:'bar',data:{labels:dd.map(x=>title(x.p)),datasets:[{label:'Variação',data:dd.map(x=>x.v),backgroundColor:dd.map(x=>x.v>=0?css('--ok'):css('--late')),borderRadius:6,
+    datalabels:DL({anchor:c=>c.raw>=0?'end':'start',align:c=>c.raw>=0?'right':'left',formatter:v=>(v>0?'+':'')+fmt(v)})}]},
+    options:{indexAxis:'y',layout:{padding:{left:10,right:44}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const x=dd[c.dataIndex];return [` ${x.v>0?'+':''}${fmt(x.v)} tarefas (${x.v>=0?'+':''}${pct(x.b/x.a-1)})`,` ${mL(PM)}: ${fmt(x.a)} → ${mL(MM)}: ${fmt(x.b)}`];}}}},
+      scales:{x:{grace:'18%',ticks:{callback:v=>fmt(v)},grid:G(),border:{display:false}},y:{grid:{display:false},border:{display:false},ticks:{color:c=>deptOf[dd[c.index]?.p]==='PJ'?css('--pj'):css('--pf'),font:{weight:'700'}}}}}});
+  // late
+  const ll=[...ppl].sort((a,b)=>b.pl-a.pl);
+  mk('mesLate',{type:'bar',data:{labels:ll.map(x=>title(x.p)),datasets:[{label:'% atraso',data:ll.map(x=>+(x.pl*100).toFixed(2)),
+    backgroundColor:ll.map(x=>x.pl>.05?css('--late'):x.pl>.01?css('--gold'):css('--ok')),borderRadius:6,datalabels:DL({anchor:'end',align:'end',formatter:v=>P1(v)})}]},
+    options:{indexAxis:'y',layout:{padding:{right:46}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const x=ll[c.dataIndex];return ` ${P1(c.parsed.x)} · ${fmt(x.as)} tarefas`+(x.bpl!=null?` · mês anterior ${pct(x.bpl)}`:'');}}}},
+      scales:{x:{...yP,suggestedMax:5},y:{grid:{display:false},border:{display:false},ticks:{color:c=>deptOf[ll[c.index]?.p]==='PJ'?css('--pj'):css('--pf'),font:{weight:'700'}}}}}});
+  // table
+  const prevRank=PM?[...new Set(prv.map(r=>r.p))].map(p=>[p,sum(prv.filter(r=>r.p===p),'t')]).sort((a,b)=>b[1]-a[1]).map(x=>x[0]):[];
+  const mx=Math.max(...ppl.map(x=>x.t),1);
+  document.getElementById('mesTbl').innerHTML=`<thead><tr><th>Posição</th><th style="text-align:left">Pessoa</th><th style="text-align:left">Depto</th><th>Tarefas</th><th>vs ant.</th><th>Recorrentes</th><th>O.S.</th><th>% O.S.</th><th>Atrasos</th><th>% atraso</th><th>% do mês</th></tr></thead><tbody>`+
+    ppl.map((x,i)=>{const pr=prevRank.indexOf(x.p);const mv=pr<0?'<span class="mv" style="color:var(--gold)">novo</span>':pr>i?`<span class="mv up">▲${pr-i}</span>`:pr<i?`<span class="mv down">▼${i-pr}</span>`:'<span class="mv" style="color:var(--faint)">=</span>';
+      return `<tr><td class="pos">${i+1}º${PM?mv:''}</td><td style="text-align:left"><span class="dot" style="background:${pColor[x.p]}"></span>${title(x.p)}</td><td style="text-align:left"><span class="badge ${x.d}" style="font-size:10.5px;padding:1px 8px">${x.d}</span></td>
+      <td><b>${fmt(x.t)}</b><span class="mini" style="width:${x.t/mx*70}px;background:linear-gradient(90deg,${pColor[x.p]},${alpha(pColor[x.p],.5)})"></span></td>
+      <td>${x.bt!=null?`<span class="${x.t>=x.bt?'up':'down'}">${x.t>=x.bt?'+':''}${fmt(x.t-x.bt)}</span>`:'—'}</td><td>${fmt(x.r)}</td><td>${fmt(x.o)}</td><td>${pct(x.po)}</td>
+      <td style="color:${x.as?'var(--late)':'inherit'}">${fmt(x.as)}</td><td>${pct(x.pl,2)}</td><td>${pct(x.t/A.t)}</td></tr>`;}).join('')+
+    `</tbody><tfoot><tr><td></td><td style="text-align:left">Total</td><td></td><td>${fmt(A.t)}</td><td>${B.rows?`<span class="${A.t>=B.t?'up':'down'}">${A.t>=B.t?'+':''}${fmt(A.t-B.t)}</span>`:'—'}</td><td>${fmt(A.r)}</td><td>${fmt(A.o)}</td><td>${pct(A.po)}</td><td>${fmt(A.as)}</td><td>${pct(A.pl,2)}</td><td>100%</td></tr></tfoot>`;
 }
 
 /* ---------------- MENSAL ---------------- */
@@ -482,18 +612,18 @@ function renderMensal(){
   const showD=DEP==='ALL'?DEPS:[DEP];
   const dset={PJ:PJm,PF:PFm};
   const dc={PJ:[css('--pj'),css('--pj2')],PF:[css('--pf'),css('--pf2')]};
-  mk('mDept',{type:'bar',data:{labels,datasets:showD.map((d,i)=>({label:d,data:dset[d].map(x=>x.t),backgroundColor:grad(dc[d][0],dc[d][1]),stack:'s',
+  mk('mDept',{type:'bar',data:{labels,datasets:showD.map((d,i)=>({label:d,data:dset[d].map(x=>x.t),backgroundColor:hg(dc[d][1],dc[d][0]),stack:'s',
       borderRadius:i===showD.length-1?{topLeft:8,topRight:8}:0,
       datalabels:DL({color:'#fff',font:{size:10.5,weight:'700'},formatter:v=>v?fmt(v):''})}))},
     options:{interaction:{mode:'index',intersect:false},plugins:{tooltip:{...tipN,callbacks:{...tipN.callbacks,footer:it=>'Total: '+fmt(Tm[it[0].dataIndex].t)}}},scales:{x:{...xN,stacked:true},y:{...yN,stacked:true}}}});
-  mk('mMoM',{type:'bar',data:{labels:labels.slice(1),datasets:showD.map(d=>({label:d,data:dset[d].slice(1).map((x,i)=>+((x.t/dset[d][i].t-1)*100).toFixed(1)),backgroundColor:dc[d][0],borderRadius:5}))
+  mk('mMoM',{type:'bar',data:{labels:labels.slice(1),datasets:showD.map(d=>({label:d,data:dset[d].slice(1).map((x,i)=>+((x.t/dset[d][i].t-1)*100).toFixed(1)),backgroundColor:hc(()=>dc[d][0]),borderRadius:5}))
       .concat(DEP==='ALL'?[{type:'line',label:'Equipe',data:Tm.slice(1).map((x,i)=>+((x.t/Tm[i].t-1)*100).toFixed(1)),borderColor:css('--gold'),backgroundColor:css('--gold'),pointRadius:4,tension:.3,
         datalabels:DL({align:'top',color:css('--gold'),font:{size:10.5,weight:'700'},formatter:v=>(v>0?'+':'')+P1(v)})}]:[])},
     options:{layout:{padding:{top:16}},interaction:{mode:'index',intersect:false},plugins:{tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y>0?'+':''}${P1(c.parsed.y)}`}}},scales:{x:xN,y:{...yP,beginAtZero:false}}}});
   mk('mOS',{type:'line',data:{labels,datasets:showD.map(d=>({label:d,data:dset[d].map(x=>+(x.po*100).toFixed(1)),borderColor:dc[d][0],backgroundColor:grad(alpha(dc[d][0],0),alpha(dc[d][0],.35)),fill:true,tension:.35,pointRadius:4,pointBackgroundColor:css('--surface'),pointBorderWidth:2.5,
       datalabels:DL({align:d==='PJ'?'top':'bottom',color:dc[d][0],font:{size:10.5,weight:'700'},formatter:v=>P1(v)})}))},
     options:{layout:{padding:{top:18,bottom:6}},interaction:{mode:'index',intersect:false},plugins:{tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${P1(c.parsed.y)}`}}},scales:{x:xN,y:{...yP,suggestedMax:45}}}});
-  mk('mPer',{type:'bar',data:{labels,datasets:showD.map(d=>({label:d,data:dset[d].map(x=>x.n?Math.round(x.t/x.n):0),backgroundColor:grad(dc[d][1],dc[d][0]),borderRadius:6,
+  mk('mPer',{type:'bar',data:{labels,datasets:showD.map(d=>({label:d,data:dset[d].map(x=>x.n?Math.round(x.t/x.n):0),backgroundColor:hg(dc[d][1],dc[d][0]),borderRadius:6,
       datalabels:DL({anchor:'end',align:'end',font:{size:10,weight:'700'},color:dc[d][0],formatter:v=>fmt(v)})}))},
     options:{layout:{padding:{top:18}},interaction:{mode:'index',intersect:false},plugins:{tooltip:{...tipN,callbacks:{...tipN.callbacks,afterLabel:c=>` Pessoas ativas: ${dset[showD[c.datasetIndex]][c.dataIndex].n}`}}},scales:{x:xN,y:yN}}});
   // matrix
@@ -508,15 +638,16 @@ function renderMensal(){
     const mn=Math.min(...vals),mx=Math.max(...vals),t=(v-mn)/(mx-mn||1);const a=dark?mix('#1d1d36',c[3][1],.15+t*.75):mix(c[3][0],c[3][1],t*.85);return `<td style="background:${a};color:${lum(a)<.55?'#fff':'#14142b'};font-weight:${t>.8?800:600}">${c[2](v)}</td>`;};
   const T=agg(R);
   document.getElementById('mTbl').innerHTML=`<thead><tr><th>Mês</th>${cols.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>`+
-    rows.map(r=>`<tr><td><b>${r.lab}</b></td>${cols.map(c=>cell(c,r[c[1]])).join('')}</tr>`).join('')+
+    rows.map(r=>`<tr class="${isMon(r.lab)?'sel':''}"><td><b>${r.lab}</b></td>${cols.map(c=>cell(c,r[c[1]])).join('')}</tr>`).join('')+
     `</tbody><tfoot><tr><td>Total</td><td>${fmt(T.t)}</td><td>${fmt(T.r)}</td><td>${fmt(T.o)}</td><td>${pct(T.po)}</td><td>${fmt(sum(PJm,'t'))}</td><td>${fmt(sum(PFm,'t'))}</td><td>${T.n}</td><td>${fmt(T.t/T.rows)}</td><td>${T.ab}</td><td>${fmt(T.as)}</td><td>${pct(T.pl,2)}</td><td>—</td></tr></tfoot>`;
 }
 
 /* ---------------- INDIVIDUAL ---------------- */
 let PSEL=allPeople[0];
-const pAgg=p=>agg(RAW.filter(r=>r.p===p));
-function scores(){ // 0-100 per axis across team
-  const S=allPeople.map(p=>{const rs=RAW.filter(r=>r.p===p),A=agg(rs),ts=rs.map(r=>r.t),mu=A.t/rs.length,sd=Math.sqrt(sum(ts,x=>(x-mu)**2)/ts.length);
+const pAgg=p=>agg(RP().filter(r=>r.p===p));
+function scores(){ // 0-100 per axis across team (year based)
+  const Y=RY();
+  const S=peopleY().map(p=>{const rs=Y.filter(r=>r.p===p),A=agg(rs),ts=rs.map(r=>r.t),mu=A.t/rs.length,sd=Math.sqrt(sum(ts,x=>(x-mu)**2)/ts.length);
     const h=Math.max(1,Math.floor(rs.length/2)),g=sum(rs.slice(-h),'t')/sum(rs.slice(0,h),'t')-1;
     return {p,vol:mu,os:A.po,pont:1-A.pl,cons:1-sd/mu,gr:rs.length>1?g:0};});
   const keys=['vol','os','pont','cons','gr'],out={};
@@ -525,38 +656,43 @@ function scores(){ // 0-100 per axis across team
 }
 let SC;
 function renderPills(){
-  document.getElementById('peoplePills').innerHTML=DEPS.map(d=>`<span class="badge ${d}" style="align-self:center">${d}</span>`+allPeople.filter(p=>deptOf[p]===d).map(p=>`<button data-p="${p}" class="${p===PSEL?'on':''}" style="${p===PSEL?`background:linear-gradient(135deg,${pColor[p]},${alpha(pColor[p],.75)})`:''}"><i style="background:${p===PSEL?'#fff':pColor[p]}"></i>${title(p)}</button>`).join('')).join('<span style="width:12px"></span>');
+  document.getElementById('peoplePills').innerHTML=DEPS.map(d=>`<span class="badge ${d}" style="align-self:center">${d}</span>`+peopleY().filter(p=>deptOf[p]===d).map(p=>`<button data-p="${p}" class="${p===PSEL?'on':''}" style="${p===PSEL?`background:linear-gradient(135deg,${pColor[p]},${alpha(pColor[p],.75)})`:''}"><i style="background:${p===PSEL?'#fff':pColor[p]}"></i>${title(p)}</button>`).join('')).join('<span style="width:12px"></span>');
   document.querySelectorAll('#peoplePills button').forEach(b=>b.onclick=()=>{PSEL=b.dataset.p;renderPills();renderIndividual();});
 }
 function renderIndividual(){
-  const p=PSEL,d=deptOf[p],A=pAgg(p),rs=months.map(m=>RAW.find(r=>r.p===p&&r.m===m));
-  const valid=rs.filter(Boolean);
-  const rankAll=allPeople.map(x=>[x,pAgg(x).t]).sort((a,b)=>b[1]-a[1]).findIndex(x=>x[0]===p)+1;
-  const deptP=allPeople.filter(x=>deptOf[x]===d);
-  const rankD=deptP.map(x=>[x,pAgg(x).t]).sort((a,b)=>b[1]-a[1]).findIndex(x=>x[0]===p)+1;
-  const DA=agg(RAW.filter(r=>r.d===d));
+  const RYr=RY(),RPr=RP();
+  const p=PSEL,d=deptOf[p],A=pAgg(p),AY=agg(RYr.filter(r=>r.p===p)),rs=months.map(m=>RYr.find(r=>r.p===p&&r.m===m));
+  const valid=rs.filter(Boolean),has=A.rows>0;
+  const pplP=[...new Set(RPr.map(r=>r.p))];
+  const rankAll=has?pplP.map(x=>[x,pAgg(x).t]).sort((a,b)=>b[1]-a[1]).findIndex(x=>x[0]===p)+1:null;
+  const deptP=peopleY().filter(x=>deptOf[x]===d), deptPP=pplP.filter(x=>deptOf[x]===d);
+  const rankD=has?deptPP.map(x=>[x,pAgg(x).t]).sort((a,b)=>b[1]-a[1]).findIndex(x=>x[0]===p)+1:null;
+  const DA=agg(RPr.filter(r=>r.d===d)), DAY=agg(RYr.filter(r=>r.d===d));
   const best=valid.reduce((a,r)=>r.t>a.t?r:a);
-  const avg=A.t/valid.length, davg=DA.t/DA.rows;
-  const c=pColor[p];
+  const avg=AY.t/valid.length, davg=DAY.t/DAY.rows;
+  const c=pColor[p], em=MONTH?' em '+mL(MONTH):'';
   document.getElementById('profileCard').innerHTML=`<div class="profile"><div class="avatar" style="background:linear-gradient(135deg,${c},${alpha(c,.6)})">${ini(p)}</div>
     <div><span class="badge ${d}">${d}</span><h3>${title(p)}</h3>
-    <div class="chips"><span class="chip"><b>${rankAll}º</b> na equipe</span><span class="chip"><b>${rankD}º</b> de ${deptP.length} no ${d}</span><span class="chip"><b>${valid.length}</b> ${valid.length>1?'meses':'mês'} ativos</span></div></div></div>
-    <div style="margin-top:16px;font-size:13px;color:var(--muted)">Responde por <b style="color:var(--text)">${pct(A.t/DA.t)}</b> das tarefas do ${d} e <b style="color:var(--text)">${pct(A.t/sum(RAW,'t'))}</b> da equipe.
-    Média mensal <b style="color:${avg>=davg?'var(--ok)':'var(--late)'}">${avg>=davg?'+':''}${pct(avg/davg-1)}</b> frente à média do ${d}.</div>`;
-  const trend=valid.length>1?valid.at(-1).t/valid[0].t-1:0;
+    <div class="chips">${has?`<span class="chip"><b>${rankAll}º</b> na equipe${em}</span><span class="chip"><b>${rankD}º</b> de ${deptPP.length} no ${d}</span>`:`<span class="chip">Sem registro${em}</span>`}<span class="chip"><b>${valid.length}</b> ${valid.length>1?'meses':'mês'} ativos em ${YEAR}</span></div></div></div>
+    <div style="margin-top:16px;font-size:13px;color:var(--muted)">${has?`Responde por <b style="color:var(--text)">${pct(A.t/DA.t)}</b> das tarefas do ${d} e <b style="color:var(--text)">${pct(A.t/sum(RPr,'t'))}</b> da equipe${em}. `:''}
+    Média mensal em ${YEAR} <b style="color:${avg>=davg?'var(--ok)':'var(--late)'}">${avg>=davg?'+':''}${pct(avg/davg-1)}</b> frente à média do ${d}.</div>`;
+  let tr,trN,trL;
+  if(MONTH){const cu=RYr.find(r=>r.p===p&&r.m===MONTH),pv=RAW.find(r=>r.p===p&&r.m===prevM(MONTH));trL='vs mês anterior';
+    if(cu&&pv){tr=cu.t/pv.t-1;trN=`<span class="${tr>=0?'up':'down'}">${fmt(pv.t)} → ${fmt(cu.t)}</span> · ${mL(prevM(MONTH))} → ${mL(MONTH)}`;}else{tr=null;trN='sem os dois meses para comparar';}}
+  else{tr=valid.length>1?valid.at(-1).t/valid[0].t-1:0;trL='1º → último mês';trN=`<span class="${tr>=0?'up':'down'}">${fmt(valid[0].t)} → ${fmt(valid.at(-1).t)}</span>`;}
   document.getElementById('kpisPessoa').innerHTML=[
-    {l:'Total acumulado',v:fmt(A.t),n:`${fmt(A.r)} recorrentes · ${fmt(A.o)} O.S.`,i:'sum',c,c2:alpha(c,.55)},
-    {l:'Média mensal',v:fmt(avg),n:`Média do ${d}: ${fmt(davg)}`,i:'users',c:d==='PJ'?'#7c3aed':'#0d9488',c2:d==='PJ'?'#c084fc':'#5eead4'},
-    {l:'Melhor mês',v:mL(best.m),n:`${fmt(best.t)} tarefas`,i:'star',c:'#f59e0b',c2:'#fde047'},
-    {l:'Peso de O.S.',v:pct(A.po),n:`${d}: ${pct(DA.po)}`,i:'tool',c:'#ea580c',c2:'#fbbf24'},
-    {l:'% com atraso',v:pct(A.pl,2),n:`${fmt(A.as)} tarefas · ${d}: ${pct(DA.pl,2)}`,i:'clock',c:'#e11d48',c2:'#fb7185'},
-    {l:'1º → último mês',v:(trend>=0?'+':'')+pct(trend),n:`<span class="${trend>=0?'up':'down'}">${fmt(valid[0].t)} → ${fmt(valid.at(-1).t)}</span>`,i:'trend',c:'#0891b2',c2:'#67e8f9'},
+    {l:MONTH?'Tarefas'+em:'Total acumulado',v:has?fmt(A.t):'—',n:has?`${fmt(A.r)} recorrentes · ${fmt(A.o)} O.S.`:'sem registro no mês',i:'sum',c,c2:alpha(c,.55)},
+    {l:'Média mensal '+YEAR,v:fmt(avg),n:`Média do ${d}: ${fmt(davg)}`,i:'users',c:d==='PJ'?'#7c3aed':'#0d9488',c2:d==='PJ'?'#c084fc':'#5eead4'},
+    {l:'Melhor mês de '+YEAR,v:mL(best.m),n:`${fmt(best.t)} tarefas`,i:'star',c:'#f59e0b',c2:'#fde047'},
+    {l:'Peso de O.S.'+em,v:has?pct(A.po):'—',n:`${d}: ${pct(DA.po)}`,i:'tool',c:'#ea580c',c2:'#fbbf24'},
+    {l:'% com atraso'+em,v:has?pct(A.pl,2):'—',n:`${fmt(A.as)} tarefas · ${d}: ${pct(DA.pl,2)}`,i:'clock',c:'#e11d48',c2:'#fb7185'},
+    {l:trL,v:tr==null?'—':(tr>=0?'+':'')+pct(tr),n:trN,i:'trend',c:'#0891b2',c2:'#67e8f9'},
   ].map(kpiCard).join('');
   document.getElementById('tPessoa').textContent='Evolução mensal — '+title(p);
-  const dAvgM=months.map(m=>{const x=agg(RAW.filter(r=>r.d===d&&r.m===m));return x.n?Math.round(x.t/x.n):null;});
+  const dAvgM=months.map(m=>{const x=agg(RYr.filter(r=>r.d===d&&r.m===m));return x.n?Math.round(x.t/x.n):null;});
   mk('iMonthly',{type:'bar',data:{labels,datasets:[
-    {label:'Recorrentes',data:rs.map(r=>r?r.r:null),backgroundColor:grad(alpha(css('--rec'),.75),css('--rec')),stack:'s',borderRadius:0},
-    {label:'O.S.',data:rs.map(r=>r?r.o:null),backgroundColor:grad(css('--os'),css('--os2')),stack:'s',borderRadius:{topLeft:8,topRight:8},
+    {label:'Recorrentes',data:rs.map(r=>r?r.r:null),backgroundColor:hg(alpha(css('--rec'),.75),css('--rec')),stack:'s',borderRadius:0},
+    {label:'O.S.',data:rs.map(r=>r?r.o:null),backgroundColor:hg(css('--os2'),css('--os')),stack:'s',borderRadius:{topLeft:8,topRight:8},
       datalabels:DL({anchor:'end',align:'end',offset:1,font:{size:10.5,weight:'700'},formatter:(v,c)=>rs[c.dataIndex]?fmt(rs[c.dataIndex].t):''})},
     {type:'line',label:`Média ${d}`,data:dAvgM,borderColor:d==='PJ'?css('--pj'):css('--pf'),borderDash:[6,4],pointRadius:0,tension:.3},
   ]},options:{layout:{padding:{top:20}},interaction:{mode:'index',intersect:false},plugins:{tooltip:tipN},scales:{x:{...xN,stacked:true},y:{...yN,stacked:true}}}});
@@ -566,36 +702,37 @@ function renderIndividual(){
   mk('iRadar',{type:'radar',data:{labels:ax,datasets:[
     {label:title(p),data:k.map(kk=>SC[p][kk]),borderColor:c,backgroundColor:alpha(c,.28),pointBackgroundColor:c,pointRadius:4,borderWidth:2.5},
     {label:`Média ${d}`,data:avgSc(deptP),borderColor:d==='PJ'?css('--pj2'):css('--pf2'),backgroundColor:'transparent',borderDash:[5,4],pointRadius:0,borderWidth:2},
-    {label:'Média equipe',data:avgSc(allPeople),borderColor:css('--gold'),backgroundColor:'transparent',borderDash:[2,3],pointRadius:0,borderWidth:2},
+    {label:'Média equipe',data:avgSc(peopleY()),borderColor:css('--gold'),backgroundColor:'transparent',borderDash:[2,3],pointRadius:0,borderWidth:2},
   ]},options:{scales:{r:{min:0,max:100,ticks:{display:false,stepSize:25},grid:{color:css('--border')},angleLines:{color:css('--border')},pointLabels:{font:{size:12,weight:'700'},color:css('--text')}}},
     plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.raw}/100`}}}}});
-  const rk=(pp,m,dd)=>{const l=RAW.filter(r=>r.m===m&&(!dd||r.d===dd)).sort((a,b)=>b.t-a.t);const i=l.findIndex(r=>r.p===pp);return i<0?null:i+1;};
+  const rk=(pp,m,dd)=>{const l=RYr.filter(r=>r.m===m&&(!dd||r.d===dd)).sort((a,b)=>b.t-a.t);const i=l.findIndex(r=>r.p===pp);return i<0?null:i+1;};
   mk('iRank',{type:'line',data:{labels,datasets:[
     {label:'Geral',data:months.map(m=>rk(p,m)),borderColor:c,backgroundColor:c,pointRadius:5,tension:.25,datalabels:DL({align:'top',color:c,formatter:v=>v?v+'º':''})},
     {label:`No ${d}`,data:months.map(m=>rk(p,m,d)),borderColor:css('--gold'),backgroundColor:css('--gold'),pointRadius:4,borderDash:[5,4],tension:.25,datalabels:DL({align:'bottom',color:css('--gold'),formatter:v=>v?v+'º':''})},
   ]},options:{layout:{padding:{top:22,bottom:6}},plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y}º`}}},scales:{x:xN,y:{reverse:true,min:1,max:12,ticks:{stepSize:1,callback:v=>v+'º'},grid:G(),border:{display:false}}}}});
-  const dLate=months.map(m=>{const x=agg(RAW.filter(r=>r.d===d&&r.m===m));return +(x.pl*100).toFixed(2);});
+  const dLate=months.map(m=>{const x=agg(RYr.filter(r=>r.d===d&&r.m===m));return +(x.pl*100).toFixed(2);});
   mk('iLate',{type:'bar',data:{labels,datasets:[
-    {label:title(p),data:rs.map(r=>r?+(r.as/r.t3*100).toFixed(2):null),backgroundColor:rs.map(r=>!r?null:(r.as/r.t3>.05?css('--late'):r.as/r.t3>.01?css('--gold'):css('--ok'))),borderRadius:6,
+    {label:title(p),data:rs.map(r=>r?+(r.as/r.t3*100).toFixed(2):null),backgroundColor:hc(ctx=>{const r=rs[ctx.dataIndex];return !r?'#000000':toHex(r.as/r.t3>.05?css('--late'):r.as/r.t3>.01?css('--gold'):css('--ok'));}),borderRadius:6,
       datalabels:DL({anchor:'end',align:'end',font:{size:10,weight:'700'},formatter:v=>!v?'':P1(v)})},
     {type:'line',label:`Média ${d}`,data:dLate,borderColor:d==='PJ'?css('--pj'):css('--pf'),borderDash:[6,4],pointRadius:0,tension:.3},
   ]},options:{layout:{padding:{top:18}},plugins:{tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${P1(c.parsed.y)}`}}},scales:{x:xN,y:yP}}});
   // bubble
-  const pts=allPeople.map(x=>{const a=pAgg(x);return {p:x,x:Math.round(a.t/a.rows),y:+(a.pl*100).toFixed(2),r:6+a.po*40,po:a.po,d:deptOf[x]};});
+  const pts=pplP.map(x=>{const a=pAgg(x);return {p:x,x:Math.round(a.t/a.rows),y:+(a.pl*100).toFixed(2),r:6+a.po*40,po:a.po,d:deptOf[x]};});
   mk('iBubble',{type:'bubble',data:{datasets:DEPS.map(dd=>({label:dd,data:pts.filter(q=>q.d===dd),
     backgroundColor:pts.filter(q=>q.d===dd).map(q=>q.p===p?alpha(dd==='PJ'?css('--pj'):css('--pf'),.95):alpha(dd==='PJ'?css('--pj'):css('--pf'),.35)),
     borderColor:pts.filter(q=>q.d===dd).map(q=>q.p===p?css('--text'):(dd==='PJ'?css('--pj'):css('--pf'))),borderWidth:pts.filter(q=>q.d===dd).map(q=>q.p===p?3:1.5),
     datalabels:DL({align:'end',anchor:'end',offset:4,font:ctx=>({size:11,weight:ctx.dataset.data[ctx.dataIndex].p===p?'800':'600'}),color:css('--text'),formatter:v=>title(v.p).split(' ')[0]})}))},
-    options:{layout:{padding:{top:20,right:30}},plugins:{tooltip:{callbacks:{label:c=>{const v=c.raw;return [` ${title(v.p)} (${v.d})`,` Média mensal: ${fmt(v.x)}`,` Atraso: ${P1(v.y)}`,` Peso de O.S.: ${pct(v.po)}`];}}}},
-      scales:{x:{...yN,beginAtZero:false,title:{display:true,text:'Média mensal de tarefas',font:{weight:'700'}}},y:{...yP,title:{display:true,text:'% concluído com atraso',font:{weight:'700'}}}}}});
+    options:{layout:{padding:{top:20,right:30}},plugins:{tooltip:{callbacks:{label:c=>{const v=c.raw;return [` ${title(v.p)} (${v.d})`,` ${MONTH?'Tarefas no mês':'Média mensal'}: ${fmt(v.x)}`,` Atraso: ${P1(v.y)}`,` Peso de O.S.: ${pct(v.po)}`];}}}},
+      scales:{x:{...yN,beginAtZero:false,title:{display:true,text:MONTH?'Tarefas em '+mL(MONTH):'Média mensal de tarefas',font:{weight:'700'}}},y:{...yP,title:{display:true,text:'% concluído com atraso',font:{weight:'700'}}}}}});
 }
 
 /* ---------------- PJ x PF ---------------- */
 function renderDept(){
-  const D=Object.fromEntries(DEPS.map(d=>{const rs=RAW.filter(r=>r.d===d),A=agg(rs),ppl=allPeople.filter(p=>deptOf[p]===d);
+  const RPr=RP(),RYr=RY();
+  const D=Object.fromEntries(DEPS.map(d=>{const rs=RPr.filter(r=>r.d===d),A=agg(rs),ppl=allPeople.filter(p=>deptOf[p]===d&&rs.some(r=>r.p===p));
     const top=ppl.map(p=>[p,pAgg(p).t]).sort((a,b)=>b[1]-a[1])[0];return [d,{...A,ppl,top,pm:A.t/A.rows}];}));
-  const T=sum(RAW,'t');
-  const side=d=>{const x=D[d];return `<div class="side ${d.toLowerCase()}"><h4>Departamento ${d}</h4><div class="big">${fmt(x.t)}</div><div class="sm">tarefas · ${pct(x.t/T)} da equipe · ${x.ppl.length} pessoas</div>
+  const T=sum(RPr,'t');
+  const side=d=>{const x=D[d];return `<div class="side ${d.toLowerCase()}"><h4>Departamento ${d}</h4><div class="big">${fmt(x.t)}</div><div class="sm">tarefas${MONTH?' em '+mL(MONTH):' em '+YEAR} · ${pct(x.t/T)} da equipe · ${x.ppl.length} pessoas</div>
     <ul><li><b>${fmt(x.pm)}</b> tarefas por pessoa/mês</li><li><b>${pct(x.po)}</b> de O.S.</li><li><b>${pct(x.pl,2)}</b> concluídas com atraso</li><li>Destaque: <b>${title(x.top[0])}</b> (${fmt(x.top[1])})</li></ul></div>`;};
   document.getElementById('duel').innerHTML=side('PJ')+'<div class="vs">VS</div>'+side('PF');
   const rowsC=[
@@ -603,7 +740,7 @@ function renderDept(){
     ['Recorrentes',D.PJ.r,D.PF.r,fmt],['O.S.',D.PJ.o,D.PF.o,fmt],['% O.S.',D.PJ.po,D.PF.po,v=>pct(v)],['Atrasos',D.PJ.as,D.PF.as,fmt],['% atraso',D.PJ.pl,D.PF.pl,v=>pct(v,2)],['Abertas',D.PJ.ab,D.PF.ab,v=>v]];
   document.getElementById('cmp').innerHTML=rowsC.map(([l,a,b,f])=>{const m=Math.max(a,b)||1;return `<div class="r"><div class="v l">${f(a)}</div><div class="track l"><span style="width:${a/m*100}%;background:linear-gradient(270deg,var(--pj),var(--pj2))"></span></div><div class="lab">${l}</div><div class="track"><span style="width:${b/m*100}%;background:linear-gradient(90deg,var(--pf),var(--pf2))"></span></div><div class="v r2">${f(b)}</div></div>`}).join('')+
     `<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:800;margin-top:4px"><span style="color:var(--pj)">◀ PJ</span><span style="color:var(--pf)">PF ▶</span></div>`;
-  const dm=d=>months.map(m=>agg(RAW.filter(r=>r.m===m&&r.d===d)));
+  const dm=d=>months.map(m=>agg(RYr.filter(r=>r.m===m&&r.d===d)));
   const PJm=dm('PJ'),PFm=dm('PF');
   mk('dLine',{type:'line',data:{labels,datasets:[
     {label:'PJ — total',data:PJm.map(x=>x.t),borderColor:css('--pj'),backgroundColor:grad(alpha(css('--pj'),0),alpha(css('--pj'),.35)),fill:true,tension:.35,pointRadius:3},
@@ -639,31 +776,32 @@ function renderDept(){
 
 /* ---------------- PRAZO ---------------- */
 function renderPrazo(){
-  const R=F(),A=agg(R),mA=months.map(m=>agg(R.filter(r=>r.m===m)));
+  const R=F(),A=agg(FP()),mA=months.map(m=>agg(R.filter(r=>r.m===m)));
   const worst=mA.reduce((b,x,i)=>x.pl>mA[b].pl?i:b,0),best=mA.reduce((b,x,i)=>x.pl<mA[b].pl?i:b,0);
   const ppl=[...new Set(R.map(r=>r.p))];
   const zero=ppl.filter(p=>agg(R.filter(r=>r.p===p&&r.m>=months.at(-3))).as===0);
   document.getElementById('kpisPrazo').innerHTML=[
-    {l:'No prazo',v:pct(1-A.pl,2),n:`${fmt(A.t3-A.as)} tarefas`,i:'check',c:'#059669',c2:'#34d399'},
-    {l:'Com atraso',v:fmt(A.as),n:`${pct(A.pl,2)} das concluídas`,i:'clock',c:'#e11d48',c2:'#fb7185'},
+    {l:'No prazo'+(MONTH?' em '+mL(MONTH):''),v:pct(1-A.pl,2),n:`${fmt(A.t3-A.as)} tarefas`,i:'check',c:'#059669',c2:'#34d399'},
+    {l:'Com atraso'+(MONTH?' em '+mL(MONTH):''),v:fmt(A.as),n:`${pct(A.pl,2)} das concluídas`,i:'clock',c:'#e11d48',c2:'#fb7185'},
     {l:'Pior mês',v:labels[worst],n:`${pct(mA[worst].pl)} com atraso (${fmt(mA[worst].as)})`,i:'trend',c:'#f97316',c2:'#fbbf24'},
     {l:'Melhor mês',v:labels[best],n:`${pct(mA[best].pl,2)} com atraso (${fmt(mA[best].as)})`,i:'star',c:'#0d9488',c2:'#5eead4'},
-    {l:'Tarefas abertas',v:fmt(A.ab),n:A.ab?`todas até ${labels[Math.max(...R.filter(r=>r.ab>0).map(r=>months.indexOf(r.m)))]}; zeradas depois`:'nenhuma pendente',i:'open',c:'#6366f1',c2:'#a5b4fc'},
+    {l:'Tarefas abertas'+(MONTH?' em '+mL(MONTH):''),v:fmt(A.ab),n:MONTH?(A.ab?'pendentes no mês':'nenhuma pendente no mês'):(A.ab?`todas até ${labels[Math.max(...R.filter(r=>r.ab>0).map(r=>months.indexOf(r.m)))]}; zeradas depois`:'nenhuma pendente'),i:'open',c:'#6366f1',c2:'#a5b4fc'},
     {l:'Zero atraso no trimestre',v:zero.length+' de '+ppl.length,n:`pessoas sem atraso em ${labels.at(-3)}–${labels.at(-1)}`,i:'users',c:'#8b5cf6',c2:'#f0abfc'},
   ].map(kpiCard).join('');
   mk('pMonth',{type:'bar',data:{labels,datasets:[
     {type:'line',label:'% com atraso',data:mA.map(x=>+(x.pl*100).toFixed(2)),yAxisID:'y2',borderColor:css('--text'),backgroundColor:css('--text'),pointRadius:4,tension:.35,
       datalabels:DL({align:'top',font:{size:10.5,weight:'700'},formatter:v=>P1(v)})},
-    {label:'Tarefas com atraso',data:mA.map(x=>x.as),backgroundColor:mA.map(x=>ramp(['#34d399','#fbbf24','#f43f5e'],x.pl/0.075)),borderRadius:8,order:1},
+    {label:'Tarefas com atraso',data:mA.map(x=>x.as),backgroundColor:hc(ctx=>toHex(ramp(['#34d399','#fbbf24','#f43f5e'],mA[ctx.dataIndex].pl/0.075))),borderRadius:8,order:1},
   ]},options:{layout:{padding:{top:20}},interaction:{mode:'index',intersect:false},plugins:{tooltip:{callbacks:{label:c=>c.dataset.yAxisID==='y2'?` ${P1(c.parsed.y)}`:` ${fmt(c.parsed.y)} tarefas`}}},
     scales:{x:xN,y:yN,y2:{position:'right',beginAtZero:true,grace:'20%',grid:{display:false},border:{display:false},ticks:{callback:v=>v+'%'}}}}});
-  const pl=ppl.map(p=>{const a=agg(R.filter(r=>r.p===p));return {p,v:+(a.pl*100).toFixed(2),as:a.as};}).sort((a,b)=>b.v-a.v);
+  const RF=FP(),pplF=[...new Set(RF.map(r=>r.p))];
+  const pl=pplF.map(p=>{const a=agg(RF.filter(r=>r.p===p));return {p,v:+(a.pl*100).toFixed(2),as:a.as};}).sort((a,b)=>b.v-a.v);
   mk('pPerson',{type:'bar',data:{labels:pl.map(x=>title(x.p)),datasets:[{label:'% atraso',data:pl.map(x=>x.v),
     backgroundColor:pl.map(x=>x.v>5?css('--late'):x.v>1?css('--gold'):css('--ok')),borderRadius:6,datalabels:DL({anchor:'end',align:'end',formatter:v=>P1(v)})}]},
     options:{indexAxis:'y',layout:{padding:{right:46}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${P1(c.parsed.x)} · ${fmt(pl[c.dataIndex].as)} tarefas`}}},
       scales:{x:yP,y:{grid:{display:false},border:{display:false},ticks:{color:c=>deptOf[pl[c.index].p]==='PJ'?css('--pj'):css('--pf'),font:{weight:'700'}}}}}});
   heatTable('pHeat','as',R,['#ecfdf5','#fde68a','#fb7185','#be123c']);
-  const inc=RAW.filter(r=>r.t3!==r.cc);
+  const inc=RY().filter(r=>r.t3!==r.cc);
   document.getElementById('pNote').innerHTML=inc.length?`<b>Observação sobre a base:</b> em ${[...new Set(inc.map(r=>mL(r.m)))].join(', ')}, o bloco de atraso soma <b>${fmt(sum(inc,r=>r.t3-r.cc))}</b> tarefas a mais que as concluídas (${inc.length} pessoas). Os percentuais de atraso usam o total do próprio bloco de atraso como base.`:'';
 }
 
@@ -674,13 +812,13 @@ function heatTable(id,key,R,stops){
   const dark=document.documentElement.dataset.theme==='dark'||(!document.documentElement.dataset.theme&&matchMedia('(prefers-color-scheme: dark)').matches);
   const st=stops.slice(); if(dark) st[0]='#1d1d36';
   const f=key==='pl'?v=>pct(v):v=>fmt(v);
-  let h=`<thead><tr><th>Pessoa</th>${labels.map(l=>`<th style="text-align:center">${l}</th>`).join('')}<th>Total</th></tr></thead><tbody>`;
+  let h=`<thead><tr><th>Pessoa</th>${labels.map(l=>`<th style="text-align:center;${isMon(l)?'color:var(--gold)':''}">${l}${isMon(l)?' ●':''}</th>`).join('')}<th>Total</th></tr></thead><tbody>`;
   (DEP==='ALL'?DEPS:[DEP]).forEach(d=>{
     const ppl=allPeople.filter(p=>deptOf[p]===d&&R.some(r=>r.p===p));
     h+=`<tr class="grp"><td colspan="${months.length+2}" style="color:${d==='PJ'?'var(--pj)':'var(--pf)'}">● Departamento ${d}</td></tr>`;
     ppl.forEach(p=>{const rs=R.filter(r=>r.p===p);
       h+=`<tr><td><span class="dot" style="background:${pColor[p]}"></span>${title(p)}</td>`+months.map(m=>{const r=rs.find(x=>x.m===m);if(!r)return `<td class="c na">—</td>`;const v=val(r),t=(v-mn)/(mx-mn||1),bg=ramp(st,(key==='as'||key==='pl')?Math.sqrt(t):t);
-        return `<td class="c" style="background:${bg};color:${lum(bg)<.6?'#fff':'#14142b'}" title="${title(p)} · ${mL(m)}: ${f(v)}${key==='as'?' ('+pct(r.as/r.t3)+')':''}">${f(v)}</td>`}).join('')+
+        return `<td class="c" style="background:${bg};color:${lum(bg)<.6?'#fff':'#14142b'};${MONTH===m?'outline:3px solid var(--gold);outline-offset:-3px':(MONTH?'opacity:.55':'')}" title="${title(p)} · ${mL(m)}: ${f(v)}${key==='as'?' ('+pct(r.as/r.t3)+')':''}">${f(v)}</td>`}).join('')+
         `<td><b>${key==='pl'?pct(sum(rs,'as')/sum(rs,'t3')):fmt(sum(rs,key))}</b></td></tr>`;});
   });
   const col=months.map(m=>{const rs=R.filter(r=>r.m===m);return key==='pl'?pct(sum(rs,'as')/sum(rs,'t3')):fmt(sum(rs,key));});
@@ -693,22 +831,20 @@ document.querySelectorAll('#segHeat button').forEach(b=>b.onclick=()=>{document.
 const renderHeat=()=>heatTable('heatTbl',HK,F(),HSTOPS[HK]);
 
 /* ---------------- DADOS ---------------- */
-const selMesDados=document.getElementById('selMesDados');
-selMesDados.innerHTML=`<option value="">Todos os meses</option>`+months.map((m,i)=>`<option value="${m}">${labels[i]}</option>`).join('');
 let sortK='m',sortD=1;
 const cols=[['m','Mês'],['p','Pessoa'],['d','Depto'],['r','Recorrentes'],['o','O.S.'],['t','Total'],['po','% O.S.'],['ab','Abertas'],['cc','Concluídas'],['an','No prazo'],['as','Atraso'],['pl','% atraso']];
 function renderDados(){
-  const q=document.getElementById('q').value.trim().toUpperCase(),mm=selMesDados.value;
-  let rs=F().filter(r=>(!q||r.p.includes(q))&&(!mm||r.m===mm)).map(r=>({...r,po:r.o/r.t,pl:r.as/r.t3}));
+  const q=document.getElementById('q').value.trim().toUpperCase();
+  let rs=FP().filter(r=>(!q||r.p.includes(q))).map(r=>({...r,po:r.o/r.t,pl:r.as/r.t3}));
   rs.sort((a,b)=>{const x=a[sortK],y=b[sortK];return (x>y?1:x<y?-1:b.t-a.t)*sortD;});
   const A=agg(rs);
-  document.getElementById('countDados').textContent=`${rs.length} registros`;
+  document.getElementById('countDados').textContent=`${rs.length} registros · ${MONTH?mL(MONTH):YEAR}`;
   document.getElementById('dataTbl').innerHTML=`<thead><tr>${cols.map(([k,l])=>`<th class="sortable" data-k="${k}" style="${k==='p'||k==='d'?'text-align:left':''}">${l}${sortK===k?(sortD>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>`+
     rs.map(r=>`<tr><td>${mL(r.m)}</td><td style="text-align:left"><span class="dot" style="background:${pColor[r.p]}"></span>${title(r.p)}</td><td style="text-align:left"><span class="badge ${r.d}" style="font-size:10.5px;padding:1px 8px">${r.d}</span></td><td>${fmt(r.r)}</td><td>${fmt(r.o)}</td><td><b>${fmt(r.t)}</b></td><td>${pct(r.po)}<span class="mini" style="width:${r.po*60}px;background:var(--os)"></span></td><td style="color:${r.ab?'var(--late)':'inherit'}">${r.ab}</td><td>${fmt(r.cc)}</td><td>${fmt(r.an)}</td><td style="color:${r.as?'var(--late)':'inherit'}">${fmt(r.as)}</td><td>${pct(r.pl,2)}</td></tr>`).join('')+
     `</tbody><tfoot><tr><td>Total</td><td></td><td></td><td>${fmt(A.r)}</td><td>${fmt(A.o)}</td><td>${fmt(A.t)}</td><td>${rs.length?pct(A.po):'—'}</td><td>${A.ab}</td><td>${fmt(A.cc)}</td><td>${fmt(A.t3-A.as)}</td><td>${fmt(A.as)}</td><td>${rs.length?pct(A.pl,2):'—'}</td></tr></tfoot>`;
   document.querySelectorAll('#dataTbl th.sortable').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(sortK===k)sortD*=-1;else{sortK=k;sortD=['m','p','d'].includes(k)?1:-1;}renderDados();});
 }
-document.getElementById('q').oninput=renderDados;selMesDados.onchange=renderDados;
+document.getElementById('q').oninput=renderDados;
 
 /* ---------------- boot ---------------- */
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{
@@ -718,8 +854,28 @@ document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{
   try{history.replaceState(null,'','#'+b.dataset.tab)}catch(e){}
 });
 document.querySelectorAll('#depSeg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#depSeg button').forEach(x=>x.classList.toggle('on',x===b));DEP=b.dataset.d;renderFiltered();});
-function renderFiltered(){renderGeral();renderMensal();renderPrazo();renderHeat();renderDados();}
-function renderAll(){applyDefaults();SC=scores();renderFiltered();renderPills();renderIndividual();renderDept();}
+function renderFiltered(){renderGeral();renderMes();renderMensal();renderPrazo();renderHeat();renderDados();}
+function renderHeader(){
+  document.getElementById('eyebrow').textContent=`Relatório de produtividade · ${labels[0]}–${labels.at(-1)}`;
+  document.getElementById('heroSub').textContent=`${peopleY().length} colaboradores · PJ e PF · ${RY().length} registros mensais em ${YEAR}`;
+  document.getElementById('perChip').innerHTML=MONTH?`Período em análise: <b>${mF(MONTH)}</b>`:`Período em análise: <b>${YEAR} completo</b> · escolha um mês para detalhar`;
+  const sm=document.getElementById('selMes');sm.classList.toggle('on',!!MONTH);
+}
+function fillPeriod(){
+  const sa=document.getElementById('selAno'),sm=document.getElementById('selMes');
+  sa.innerHTML=YEARS.map(y=>`<option value="${y}" ${y===YEAR?'selected':''}>${y}</option>`).join('');
+  sm.innerHTML=`<option value="">Ano inteiro</option>`+months.map(m=>`<option value="${m}" ${m===MONTH?'selected':''}>${MESF[+m.slice(5,7)-1]}</option>`).join('');
+}
+function setPeriod(y,m){
+  YEAR=y;months=ALLM.filter(x=>x.startsWith(YEAR));labels=months.map(mL);
+  MONTH=months.includes(m)?m:'';
+  if(!peopleY().includes(PSEL))PSEL=peopleY()[0];
+  fillPeriod();renderAll();
+}
+document.getElementById('selAno').onchange=e=>setPeriod(e.target.value,'');
+document.getElementById('selMes').onchange=e=>setPeriod(YEAR,e.target.value);
+function renderAll(){applyDefaults();renderHeader();SC=scores();renderFiltered();renderPills();renderIndividual();renderDept();}
+fillPeriod();
 document.getElementById('themeBtn').onclick=()=>{const r=document.documentElement,dark=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;r.dataset.theme=dark?'light':'dark';renderAll();};
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{if(!document.documentElement.dataset.theme)renderAll();});
 renderAll();
